@@ -1,12 +1,3 @@
-/* wave1d.c
-   Simulation numérique d'une onde 1D (équation de d'Alembert)
-   Méthode : différences finies explicites (schéma classique)
-   - Cas possibles : mode propre, corde pincée, choc (vitesse initiale), deux impulsions
-   - Conditions limites : deux extrémités fixes ou une fixe + une libre
-   - Le programme génère un fichier "output.csv" contenant t, x, y
-   - Compilation : gcc -O2 -o wave1d wave1d.c -lm
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
@@ -78,7 +69,7 @@ int main() {
 
     /* ---------------- Menu utilisateur ---------------- */
 
-    printf("=== Simulation d'une onde 1D (Equation de d'Alembert) ===\n\n");
+    printf("Simulation d'une onde 1D\n\n");
 
     printf("1) Mode propre (sinus)\n");
     printf("2) Corde pincee (triangulaire ou gaussienne)\n");

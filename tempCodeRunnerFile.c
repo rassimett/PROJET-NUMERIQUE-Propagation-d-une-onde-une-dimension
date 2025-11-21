@@ -1,19 +1,10 @@
-/* wave1d.c
-   Simulation numérique d’une onde 1D (équation de d’Alembert)
-   Méthode : différences finies explicites (schéma classique)
-   - Cas possibles : mode propre, corde pincée, choc (vitesse initiale), deux impulsions
-   - Conditions limites : deux extrémités fixes ou une fixe + une libre
-   - Le programme génère un fichier "output.csv" contenant t, x, y
-   - Compilation : gcc -O2 -o wave1d wave1d.c -lm
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string.h>
 
-/* petite fonction pour éviter les problèmes d’allocation */
+/* petite fonction pour éviter les problèmes d'allocation */
 void *xmalloc(size_t n) {
     void *p = malloc(n);
     if (!p) {
@@ -25,8 +16,16 @@ void *xmalloc(size_t n) {
 
 /* ---------------- Fonctions pour les conditions initiales ---------------- */
 
-double ic_mode(double x, double L, int n, double A) {
-    return A * sin(n * M_PI * x / L);
+/* mode propre pour deux cas de limites :
+   - si bc==1 (fixe-fixe) : sin(n*pi*x/L)
+   - si bc==2 (fixe-libre)  : sin((2*n-1)*pi*x/(2*L))  (modes impairs)
+*/
+double mode_propre(double x, double L, int n, double A, int bc) {
+    if (bc == 1) {
+        return A * sin(n * M_PI * x / L);
+    } else {
+        return A * sin((2 * n - 1) * M_PI * x / (2.0 * L));
+    }
 }
 
 double ic_pince_tri(double x, double L, double x0, double largeur, double A) {
@@ -62,15 +61,15 @@ int main() {
     double v = sqrt(T0 / mu); // célérité
     double dx = L / (Nx - 1);
 
-    double r = 0.9;      // nombre CFL (<=1)
-    double dt = r * dx / v;
+    double r = 0.9;      // nombre CFL souhaité (<=1)
+    double dt = r * dx / v; // pas de temps calculé pour avoir r choisi
 
     double tmax = 0.6;   // durée de simulation
     int save_every = 5;  // on enregistre un état tous les N pas de temps
 
     /* ---------------- Menu utilisateur ---------------- */
 
-    printf("=== Simulation d'une onde 1D (Equation de d'Alembert) ===\n\n");
+    printf("Simulation d'une onde 1D\n\n");
 
     printf("1) Mode propre (sinus)\n");
     printf("2) Corde pincee (triangulaire ou gaussienne)\n");
@@ -116,7 +115,7 @@ int main() {
 
         for (int i=0; i<N; i++) {
             double x = i * dx;
-            y[i] = ic_mode(x, L, mode, A);
+            y[i] = mode_propre(x, L, mode, A, bc);
         }
 
     } else if (choix == 2) {
@@ -198,14 +197,14 @@ int main() {
         y[N-1] = 0.0;
     } else {
         y[0] = 0.0;
-        /* extrémité droite libre traitée plus loin */
+        /* extremite droite libre traitee plus loin */
     }
 
     /* ---------------- Vérification du CFL ---------------- */
 
     r = v * dt / dx;
     if (r >= 1.0) {
-        fprintf(stderr, "Erreur : condition CFL non respectee (r>=1).");
+        fprintf(stderr, "Erreur : condition CFL non respectee (r>=1).\n");
         exit(1);
     }
 
@@ -248,7 +247,7 @@ int main() {
     for (int i=0; i<N; i++)
         ecrire(f, t, i*dx, y_suiv[i]);
 
-    /* Mise à jour : y_prec ← y, y ← y_suiv */
+    /* Mise a jour : y_prec <- y, y <- y_suiv */
     for (int i=0; i<N; i++) {
         y_prec[i] = y[i];
         y[i] = y_suiv[i];

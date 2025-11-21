@@ -1,0 +1,53 @@
+% ============================
+%   visualize_wave.m
+%   Clean animation tool for wave1d CSV output
+%   Author: ChatGPT (for Mohamed Rassim)
+% ============================
+
+clear all; close all; clc;
+
+% ---- Load Data ----
+D = csvread('output.csv', 1, 0);   % skip header
+times = unique(D(:,1));
+x = unique(D(:,2));
+Nx = length(x);
+Nt = length(times);
+
+fprintf("Loaded %d spatial points and %d time steps.\n", Nx, Nt);
+
+% ---- Compute amplitude range for autoscaling ----
+y = D(:,3);
+ymax = max(abs(y));
+if ymax == 0
+    ymax = 0.01;
+end
+
+% ---- Create figure ----
+figure(1);
+set(gcf, "position", [200 150 900 500]);  % nice wide window
+
+for k = 1:Nt
+    if ~ishandle(1)
+        disp("Animation stopped by user.");
+        break;
+    end
+    
+    % Select all rows corresponding to current time step
+    idx = (D(:,1) == times(k));
+    yk = D(idx, 3);
+    
+    % ---- Plot ----
+    plot(x, yk, 'LineWidth', 2);
+    grid on;
+    hold on
+    title(sprintf('Propagation 1D — t = %.4f s', times(k)), 'fontsize', 14);
+    xlabel('Position x (m)', 'fontsize', 12);
+    ylabel('Displacement y (m)', 'fontsize', 12);
+
+    axis([min(x), max(x), -1.1*ymax, 1.1*ymax]);  % dynamic amplitude
+
+    drawnow;
+    pause(0.01);   % speed of animation
+end
+
+disp("Animation finished.");
